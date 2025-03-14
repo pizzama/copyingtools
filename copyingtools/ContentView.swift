@@ -8,17 +8,36 @@
 import SwiftUI
 
 struct ContentView: View {
+    @EnvironmentObject private var appState: AppState
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        ZStack {
+            // 主应用界面 - 用户已登录或不是首次启动
+            if !appState.isFirstLaunch {
+                NavigationView {
+                    HomeView()
+                }
+                .navigationViewStyle(StackNavigationViewStyle())
+                .accentColor(.purple) // 应用主题色
+            } else {
+                // 首次启动 - 显示引导页
+                OnboardingView(isFirstLaunch: $appState.isFirstLaunch)
+            }
         }
-        .padding()
+        .onAppear {
+            // 如果是首次启动，创建默认用户
+            if appState.isFirstLaunch && appState.currentUser == nil {
+                appState.currentUser = User(name: "小画家", avatarName: "child.avatar")
+                StorageService.shared.saveUser(appState.currentUser!)
+            }
+        }
     }
 }
 
-#Preview {
-    ContentView()
+// 预览
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView()
+            .environmentObject(AppState())
+    }
 }
